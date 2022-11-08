@@ -3,23 +3,30 @@ description: 'install portable blender from repo'
 runs:
   using: 'composite'
   steps:
-    - uses: actions/checkout@v2
-      name: pull blender
+    - name: 'cache blender.zip'
+      uses: actions/cache@v3
+      id: cache-blender
       with:
-        repository: 'lerppana/blender_portable'
-        path: ${{ github.workspace }}/blender
-        ref: ${{ matrix.vulkan_branch }}
-        persist-credentials: false
-        
+        path: "$env:GITHUB_ACTION_PATH/blender.zip"
+        key: ${{ runner.os }}-build-${{ env.cache-name }}
+
+    - name: 'download portable'
+      if: ${{ steps.cache-blender.outputs.cache-hit != 'false' }}
+      shell: 'pwsh'
+      run: |
+        $uri = "https://mirrors.dotsrc.org/blender/release/Blender3.3/blender-3.3.1-windows-x64.zip"
+        Invoke-WebRequest -Uri $uri -OutFile "$env:GITHUB_ACTION_PATH/blender.zip"
+
     - name: 'install blender'
       shell: 'pwsh'
-      working-directory: ${{ github.workspace }}/blender
       run: |
-        Install-Module -Name SysAdminsFriends -Force
-        dir *.zip | Join-File blender.zip
-        Expand-Archive -Path blender.zip -Force -DestinationPath .
+        cd "$env:GITHUB_ACTION_PATH"
+        Write-Host CWD: (Get-Location)
+        # Install-Module -Name SysAdminsFriends -Force
+        # dir *.zip | Join-File "$env:GITHUB_ACTION_PATH/blender.zip"
+        Expand-Archive -Path "$env:GITHUB_ACTION_PATH/blender.zip" -Force -DestinationPath "$env:GITHUB_ACTION_PATH"
         rm *.zip
         $folder=Get-ChildItem -Filter blender-* | Select -Expand Name
-        cd "${{ github.workspace }}/blender/$folder"
+        cd "$env:GITHUB_ACTION_PATH/$folder"
         Write-Host BLENDER_ROOT: (Get-Location)
         echo "BLENDER_ROOT=$(Get-Location)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
