@@ -1,0 +1,25 @@
+name: 'blender portable'
+description: 'install portable blender from repo'
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v2
+      name: pull blender
+      with:
+        repository: 'lerppana/blender_portable'
+        path: ${{ github.workspace }}/blender
+        ref: ${{ matrix.vulkan_branch }}
+        persist-credentials: false
+        
+    - name: 'install blender'
+      shell: 'pwsh'
+      working-directory: ${{ github.workspace }}/blender
+      run: |
+        Install-Module -Name SysAdminsFriends -Force
+        dir *.zip | Join-File blender.zip
+        Expand-Archive -Path blender.zip -Force -DestinationPath .
+        rm *.zip
+        $folder=Get-ChildItem -Filter blender-* | Select -Expand Name
+        cd "${{ github.workspace }}/blender/$folder"
+        Write-Host BLENDER_ROOT: (Get-Location)
+        echo "BLENDER_ROOT=$(Get-Location)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
