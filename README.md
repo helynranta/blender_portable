@@ -1,2 +1,2 @@
 # Blender Portable
-I have archived a portable Blender here. __WHY?__ Well I need Blender for my CI tasks and this is the fastest way to get it.
+This action downloads blender into your build pipeline and sets env variable `BLENDER_ROOT` so that you can locate it. 
